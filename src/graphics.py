@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from utils import get4corners
+from utils import get4corners, neighbors_present
 
 def drawGrid(screen, window_width, window_height, color, blockSize, offset):
      #Set the size of the grid block
@@ -38,7 +38,7 @@ def get_map_mask(dimensions):
 
     map_mask[map_mask > 1 ] = 1
 
-    return map_mask.reshape(dimensions**2)
+    return map_mask
 
 
 def get_connection_coords(centers, cells_radius, cell_size):
@@ -57,5 +57,18 @@ def get_connection_coords(centers, cells_radius, cell_size):
     segments = np.concatenate((start_segments, end_segments), axis=2)
     segments = segments.reshape((dimensions*dimensions, 4, 2, 2))
 
-    # print(segments.shape)
     return segments
+
+
+def get_segment_mask(cell_mask):
+    
+    padded_cell_mask = np.pad(cell_mask, 1)
+    size = cell_mask.shape[0]
+
+    segment_mask = np.zeros((size,size,4)) 
+
+    for x in range(1,size+1):
+        for y in range(1,size+1):
+            segment_mask[x-1,y-1] = neighbors_present(padded_cell_mask, [y,x])
+
+    return segment_mask

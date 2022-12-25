@@ -4,7 +4,7 @@
 
 # Import and initialize the pygame library
 import pygame
-from graphics import drawGrid, draw_playing_circle, get_grid, get_map_mask, get_connection_coords
+from graphics import drawGrid, draw_playing_circle, get_grid, get_map_mask, get_connection_coords, get_segment_mask
 
 pygame.init()
 
@@ -25,6 +25,7 @@ from pygame.locals import (
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 1000
 
+GRID_DIM = 11
 # colors 
 grid_color = (0,0,0)
 play_tiles_color = (255,255,255)
@@ -37,10 +38,13 @@ LINE_LENGTH = 12
 GRID_START_OFFSET = 51
 cell_radius = PLAY_TILE_RADIUS + BORDER_SIZE
 
+
 temp = LINE_LENGTH//2 + BORDER_SIZE + PLAY_TILE_RADIUS
-cells_grid = get_grid(11, BLOCK_SIZE, GRID_START_OFFSET + temp)
+cells_grid = get_grid(GRID_DIM, BLOCK_SIZE, GRID_START_OFFSET + temp)
 segments_grid = get_connection_coords(cells_grid, BLOCK_SIZE//2, cell_radius)
-map_mask = get_map_mask(11)
+map_mask = get_map_mask(GRID_DIM)
+segment_mask = get_segment_mask(map_mask).reshape((GRID_DIM**2,4))
+map_mask = map_mask.reshape(GRID_DIM**2)
 
 x_coord_00 = GRID_START_OFFSET + temp
 coord_00 = [x_coord_00, x_coord_00] 
@@ -73,7 +77,7 @@ while running:
 
     # Draw a solid blue circle in the center
     # pygame.draw.circle(screen, (0, 0, 255), (250, 250), 50, 5)
-    drawGrid(screen, SCREEN_WIDTH,  SCREEN_HEIGHT, grid_color, BLOCK_SIZE, GRID_START_OFFSET)
+    # drawGrid(screen, SCREEN_WIDTH,  SCREEN_HEIGHT, grid_color, BLOCK_SIZE, GRID_START_OFFSET)
         
 
     for center, mask in zip(cells_grid, map_mask):
@@ -81,13 +85,10 @@ while running:
             draw_playing_circle(screen, center, PLAY_TILE_RADIUS, play_tiles_color, BORDER_SIZE)
     # for tile in tiles_pos:
     #     draw_playing_circle(screen, tile, PLAY_TILE_RADIUS, play_tiles_color, BORDER_SIZE)
-    for line in lines_pos:
-        pygame.draw.line(screen, grid_color, line[0], line[1], 5)
-
-    for cell in segments_grid:
-        for segment in cell:
-            if segment.min() >= 0 and segment.max() < SCREEN_WIDTH:
-                print(segment)
+    
+    for cell, cell_mask in zip(segments_grid, segment_mask):
+        for segment, mask in zip(cell, cell_mask):
+            if mask:
                 pygame.draw.line(screen, grid_color, segment[0], segment[1], 5)
 
 
