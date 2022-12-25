@@ -5,9 +5,12 @@
 # Import and initialize the pygame library
 import pygame
 from graphics import drawGrid, draw_playing_circle, get_grid, get_map_mask, get_connection_coords, get_segment_mask
+from utils import cell_centers
+from Pin import Pin
 
 pygame.init()
 
+clock = pygame.time.Clock()
 
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
@@ -17,6 +20,7 @@ from pygame.locals import (
     K_LEFT,
     K_RIGHT,
     K_ESCAPE,
+    K_SPACE,
     KEYDOWN,
     QUIT,
 )
@@ -31,12 +35,14 @@ grid_color = (0,0,0)
 play_tiles_color = (255,255,255)
 
 # graphic elements sizes
-BLOCK_SIZE = 82
-PLAY_TILE_RADIUS = 30
+BLOCK_SIZE = 86
+PLAY_TILE_RADIUS = 32
 BORDER_SIZE = 5
 LINE_LENGTH = 12
-GRID_START_OFFSET = 51
+GRID_START_OFFSET = 27
 cell_radius = PLAY_TILE_RADIUS + BORDER_SIZE
+
+pin_radius = PLAY_TILE_RADIUS - 7
 
 
 temp = LINE_LENGTH//2 + BORDER_SIZE + PLAY_TILE_RADIUS
@@ -53,10 +59,12 @@ coord_00 = [x_coord_00, x_coord_00]
 tiles_pos = [( coord_00[0], coord_00[1]+ int(70 + LINE_LENGTH)*x) for x in range(11)]
 lines_pos = [[(coord_00[0], coord_00[1] + 35 + int(70 + LINE_LENGTH)*x  ), (coord_00[0], coord_00[1] + 35  + int(70 + LINE_LENGTH)*x + LINE_LENGTH ) ] for x in range(10)]
 
-
+playable_cells = cell_centers(cells_grid, map_mask)
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+pin = Pin((0,0,255), 0)
 
 # Run until the user asks to quit
 running = True
@@ -72,12 +80,20 @@ while running:
             if event.key == K_ESCAPE:
                 running = False
 
+    
+    keyState = pygame.key.get_pressed()
+    # print(pressed_keys)
+    if keyState[K_SPACE]:
+
+        pin.advance(1)
+        clock.tick(60)
+
     # Fill the background with white
     screen.fill((255, 255, 200))
 
     # Draw a solid blue circle in the center
     # pygame.draw.circle(screen, (0, 0, 255), (250, 250), 50, 5)
-    # drawGrid(screen, SCREEN_WIDTH,  SCREEN_HEIGHT, grid_color, BLOCK_SIZE, GRID_START_OFFSET)
+    drawGrid(screen, SCREEN_WIDTH,  SCREEN_HEIGHT, grid_color, BLOCK_SIZE, GRID_START_OFFSET)
         
 
     for center, mask in zip(cells_grid, map_mask):
@@ -90,10 +106,13 @@ while running:
         for segment, mask in zip(cell, cell_mask):
             if mask:
                 pygame.draw.line(screen, grid_color, segment[0], segment[1], 5)
-
+    
+    pygame.draw.circle(screen, pin.color,  playable_cells[pin.position], pin_radius)
+    
 
     # Flip the display
     pygame.display.flip()
+    pygame.event.pump()
 
 # Done! Time to quit.
 pygame.quit()
