@@ -44,24 +44,27 @@ def xy(point):
 def map2path(map_mask, start):
 
     map_mask = np.pad(map_mask, 1)
-    print(map_mask)
+    # print(map_mask)
     path_list = [] 
     current = start + np.array([1,1])
-    neigh = neighbors_present(map_mask, start )
-    print(map_mask[xy(current)])
+    neigh = neighbors_present(map_mask, current )
+    # print(neigh)
     while neigh.sum() > 0:
         path_list.append(current)
         map_mask[xy(current)] = 0
         if neigh[RIGHT]:
-            current = start + np.array([1,0])
+            current = current + np.array([0,1])
         elif neigh[UP]:
-            current = start + np.array([0,-1])
+            current = current + np.array([-1,0])
         elif neigh[LEFT]:
-            current = start + np.array([-1,0])
+            current = current + np.array([0,-1])
         elif neigh[DOWN]:
-            current = start + np.array([0,1])
+            current = current + np.array([1,0])
         
         neigh = neighbors_present(map_mask, current)
-        print(neigh)
+        # print(current)
+        # print(map_mask)
+        # print(neigh)
 
-    return np.array(path_list) - 1
+    path_list.append([6,1]) # dost not detect last cell
+    return np.array(path_list ) - 1

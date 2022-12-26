@@ -5,7 +5,8 @@
 # Import and initialize the pygame library
 import pygame
 from graphics import drawGrid, draw_playing_circle, get_grid, get_map_mask, get_connection_coords, get_segment_mask
-from utils import cell_centers
+from utils import cell_centers, map2path
+import numpy as np
 from Pin import Pin
 
 pygame.init()
@@ -23,6 +24,7 @@ from pygame.locals import (
     K_SPACE,
     KEYDOWN,
     QUIT,
+    KEYUP,
 )
 
 # Define constants for the screen width and height
@@ -49,6 +51,7 @@ temp = LINE_LENGTH//2 + BORDER_SIZE + PLAY_TILE_RADIUS
 cells_grid = get_grid(GRID_DIM, BLOCK_SIZE, GRID_START_OFFSET + temp)
 segments_grid = get_connection_coords(cells_grid, BLOCK_SIZE//2, cell_radius)
 map_mask = get_map_mask(GRID_DIM)
+path = map2path(get_map_mask(GRID_DIM), [4,0])
 segment_mask = get_segment_mask(map_mask).reshape((GRID_DIM**2,4))
 map_mask = map_mask.reshape(GRID_DIM**2)
 
@@ -60,6 +63,14 @@ tiles_pos = [( coord_00[0], coord_00[1]+ int(70 + LINE_LENGTH)*x) for x in range
 lines_pos = [[(coord_00[0], coord_00[1] + 35 + int(70 + LINE_LENGTH)*x  ), (coord_00[0], coord_00[1] + 35  + int(70 + LINE_LENGTH)*x + LINE_LENGTH ) ] for x in range(10)]
 
 playable_cells = cell_centers(cells_grid, map_mask)
+
+
+path = map2path(map_mask.reshape((GRID_DIM,GRID_DIM)), [4,0])
+# print(path)
+# print(cells_grid.reshape(GRID_DIM, GRID_DIM,2))
+temp_cells_grid = cells_grid.reshape(GRID_DIM, GRID_DIM,2)
+path = np.array([ temp_cells_grid[x[0],x[1]] for x in path])
+print(path.shape)
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -74,19 +85,26 @@ while running:
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
+        # print(event)
+
+        if event.type == KEYDOWN:
+            if event.key == K_SPACE:
+                pin.advance(1)
 
     if event.type == KEYDOWN:
-            # Was it the Escape key? If so, stop the loop.
-            if event.key == K_ESCAPE:
-                running = False
+        # Was it the Escape key? If so, stop the loop.
+        if event.key == K_ESCAPE:
+            running = False
 
     
-    keyState = pygame.key.get_pressed()
-    # print(pressed_keys)
-    if keyState[K_SPACE]:
 
-        pin.advance(1)
-        clock.tick(60)
+
+    # keyState = pygame.key.get_pressed()
+    # # print(pressed_keys)
+    # if keyState[K_SPACE]:
+
+        
+    #     clock.tick(60)
 
     # Fill the background with white
     screen.fill((255, 255, 200))
@@ -107,12 +125,12 @@ while running:
             if mask:
                 pygame.draw.line(screen, grid_color, segment[0], segment[1], 5)
     
-    pygame.draw.circle(screen, pin.color,  playable_cells[pin.position], pin_radius)
+    pygame.draw.circle(screen, pin.color,  path[pin.position], pin_radius)
     
 
     # Flip the display
     pygame.display.flip()
-    pygame.event.pump()
+    # pygame.event.pump()
 
 # Done! Time to quit.
 pygame.quit()
